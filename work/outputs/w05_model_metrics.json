@@ -1,0 +1,181 @@
+{
+  "assignment": "ML-08",
+  "data": "starter slice",
+  "split": "GroupKFold(5) by client_id",
+  "seed": 42,
+  "sklearn": "1.9.1",
+  "base_rate": 0.5421,
+  "per_fold_mean": {
+    "Week-4 baseline": {
+      "P@20": 0.74,
+      "P@50": 0.76,
+      "P@100": 0.766,
+      "AUC": NaN
+    },
+    "Logistic Regression": {
+      "P@20": 0.82,
+      "P@50": 0.776,
+      "P@100": 0.802,
+      "AUC": 0.6593
+    },
+    "Decision Tree (depth 3)": {
+      "P@20": 0.65,
+      "P@50": 0.62,
+      "P@100": 0.6,
+      "AUC": 0.611
+    },
+    "Random Forest": {
+      "P@20": 0.79,
+      "P@50": 0.824,
+      "P@100": 0.782,
+      "AUC": 0.6788
+    },
+    "Gradient Boosting": {
+      "P@20": 0.85,
+      "P@50": 0.832,
+      "P@100": 0.798,
+      "AUC": 0.685
+    }
+  },
+  "per_fold_std": {
+    "Week-4 baseline": {
+      "P@20": 0.0962,
+      "P@50": 0.1131,
+      "P@100": 0.121
+    },
+    "Logistic Regression": {
+      "P@20": 0.0758,
+      "P@50": 0.1053,
+      "P@100": 0.1006
+    },
+    "Decision Tree (depth 3)": {
+      "P@20": 0.05,
+      "P@50": 0.0906,
+      "P@100": 0.0731
+    },
+    "Random Forest": {
+      "P@20": 0.1294,
+      "P@50": 0.091,
+      "P@100": 0.0722
+    },
+    "Gradient Boosting": {
+      "P@20": 0.0612,
+      "P@50": 0.0438,
+      "P@100": 0.0716
+    }
+  },
+  "pooled_oof": {
+    "Week-4 baseline": {
+      "P@10": 0.6,
+      "P@20": 0.65,
+      "P@50": 0.6,
+      "P@100": 0.66,
+      "P@200": 0.685,
+      "P@500": 0.688
+    },
+    "Logistic Regression": {
+      "P@10": 0.7,
+      "P@20": 0.8,
+      "P@50": 0.86,
+      "P@100": 0.81,
+      "P@200": 0.82,
+      "P@500": 0.788
+    },
+    "Decision Tree (depth 3)": {
+      "P@10": 0.5,
+      "P@20": 0.6,
+      "P@50": 0.6,
+      "P@100": 0.57,
+      "P@200": 0.6,
+      "P@500": 0.6
+    },
+    "Random Forest": {
+      "P@10": 0.5,
+      "P@20": 0.7,
+      "P@50": 0.72,
+      "P@100": 0.75,
+      "P@200": 0.78,
+      "P@500": 0.786
+    },
+    "Gradient Boosting": {
+      "P@10": 0.9,
+      "P@20": 0.9,
+      "P@50": 0.84,
+      "P@100": 0.84,
+      "P@200": 0.845,
+      "P@500": 0.81
+    }
+  },
+  "ablation_no_window_shape": [
+    {
+      "model": "Logistic Regression",
+      "features": "all features",
+      "P@20": 0.82,
+      "P@50": 0.776,
+      "P@100": 0.802,
+      "AUC": 0.659
+    },
+    {
+      "model": "Logistic Regression",
+      "features": "without window-shape",
+      "P@20": 0.82,
+      "P@50": 0.792,
+      "P@100": 0.812,
+      "AUC": 0.661
+    },
+    {
+      "model": "Gradient Boosting",
+      "features": "all features",
+      "P@20": 0.85,
+      "P@50": 0.832,
+      "P@100": 0.798,
+      "AUC": 0.685
+    },
+    {
+      "model": "Gradient Boosting",
+      "features": "without window-shape",
+      "P@20": 0.8,
+      "P@50": 0.82,
+      "P@100": 0.796,
+      "AUC": 0.659
+    }
+  ],
+  "features": [
+    "impressions_90d",
+    "clicks_90d",
+    "sessions_90d",
+    "engaged_sessions_90d",
+    "ai_sessions_90d",
+    "search_volume",
+    "has_search_volume",
+    "cpc",
+    "has_cpc",
+    "competition",
+    "has_competition",
+    "word_count",
+    "has_word_count",
+    "days_with_impressions",
+    "days_with_sessions",
+    "content_age_days",
+    "days_since_last_update",
+    "ctr",
+    "avg_position",
+    "engagement_rate",
+    "scroll_rate",
+    "has_scroll_rate",
+    "ai_traffic_pct",
+    "has_position",
+    "competition_level_HIGH",
+    "competition_level_LOW",
+    "competition_level_MEDIUM",
+    "competition_level_unknown",
+    "content_type_comparison article",
+    "content_type_feedly article",
+    "content_type_keyword article",
+    "main_intent_commercial",
+    "main_intent_informational",
+    "main_intent_navigational",
+    "main_intent_transactional",
+    "main_intent_unknown"
+  ]
+}
