@@ -1,0 +1,177 @@
+{
+  "assignment": "ML-10",
+  "seed": 42,
+  "model": "LogisticRegression on strict-timeline features, GroupKFold(5) by client, out-of-fold",
+  "reference_for_monitoring": {
+    "base_rate": 0.5421,
+    "precision_at_50": 0.86,
+    "precision_at_200": 0.85,
+    "rule_bar_precision_at_50": 0.7,
+    "auc": 0.6609,
+    "zero_click_share_top_50": 0.82,
+    "largest_client_share_top_200": 0.2,
+    "largest_client_share_top_200_raw_model_order": 0.835,
+    "precision_at_50_capped_queue": 0.86,
+    "median_impr_61_90": 308.0,
+    "archetype_mix": {
+      "quiet_page": 0.3574,
+      "young_fading_risk": 0.2324,
+      "steady_mid": 0.2047,
+      "zero_click_visible": 0.127,
+      "low_ctr_page_1_2": 0.0403,
+      "large_established": 0.0383
+    }
+  },
+  "precision_curve": {
+    "playbook ranker (LR, strict)": {
+      "10": 0.9,
+      "20": 0.9,
+      "50": 0.86,
+      "100": 0.85,
+      "200": 0.85,
+      "500": 0.792,
+      "1000": 0.77
+    },
+    "Week-4 rule (strict)": {
+      "10": 0.7,
+      "20": 0.65,
+      "50": 0.7,
+      "100": 0.75,
+      "200": 0.72,
+      "500": 0.738,
+      "1000": 0.734
+    },
+    "random order (base rate)": {
+      "10": 0.542,
+      "20": 0.542,
+      "50": 0.542,
+      "100": 0.542,
+      "200": 0.542,
+      "500": 0.542,
+      "1000": 0.542
+    }
+  },
+  "archetype_map": [
+    {
+      "archetype": "large_established",
+      "n": 1150,
+      "action": "protect_light_review",
+      "mean_score": 0.5739,
+      "decline_rate": 0.5574,
+      "in_top_200": 9
+    },
+    {
+      "archetype": "low_ctr_page_1_2",
+      "n": 1209,
+      "action": "rewrite_title_meta",
+      "mean_score": 0.7094,
+      "decline_rate": 0.6725,
+      "in_top_200": 22
+    },
+    {
+      "archetype": "quiet_page",
+      "n": 10721,
+      "action": "no_action_batch_monitor",
+      "mean_score": 0.4423,
+      "decline_rate": 0.4176,
+      "in_top_200": 0
+    },
+    {
+      "archetype": "steady_mid",
+      "n": 6140,
+      "action": "monitor",
+      "mean_score": 0.5512,
+      "decline_rate": 0.4946,
+      "in_top_200": 2
+    },
+    {
+      "archetype": "young_fading_risk",
+      "n": 6971,
+      "action": "content_refresh_review",
+      "mean_score": 0.6802,
+      "decline_rate": 0.6745,
+      "in_top_200": 10
+    },
+    {
+      "archetype": "zero_click_visible",
+      "n": 3809,
+      "action": "verify_tracking_then_snippet_review",
+      "mean_score": 0.7284,
+      "decline_rate": 0.6805,
+      "in_top_200": 157
+    }
+  ],
+  "decay_by_age": [
+    {
+      "age_band": "90-180d",
+      "n": 12272,
+      "decline_rate": 0.627
+    },
+    {
+      "age_band": "181-270d",
+      "n": 4255,
+      "decline_rate": 0.59
+    },
+    {
+      "age_band": "271-365d",
+      "n": 7113,
+      "decline_rate": 0.47
+    },
+    {
+      "age_band": "365d+",
+      "n": 6360,
+      "decline_rate": 0.426
+    }
+  ],
+  "cost_value": {
+    "capped_top_50": {
+      "pages": 50,
+      "declining_pages_found": 43,
+      "review_hours_at_15min": 12.5,
+      "hours_per_declining_page_found": 0.291,
+      "earlier_window_clicks_covered": 10,
+      "clients": 8
+    },
+    "capped_top_200": {
+      "pages": 200,
+      "declining_pages_found": 166,
+      "review_hours_at_15min": 50.0,
+      "hours_per_declining_page_found": 0.301,
+      "earlier_window_clicks_covered": 74,
+      "clients": 10
+    },
+    "raw_model_top_50": {
+      "pages": 50,
+      "declining_pages_found": 42,
+      "review_hours_at_15min": 12.5,
+      "hours_per_declining_page_found": 0.298,
+      "earlier_window_clicks_covered": 18,
+      "clients": 4
+    },
+    "value_lane_50": {
+      "pages": 50,
+      "declining_pages_found": 24,
+      "review_hours_at_15min": 12.5,
+      "hours_per_declining_page_found": 0.521,
+      "earlier_window_clicks_covered": 21167,
+      "clients": 6
+    },
+    "random_50": {
+      "pages": 50,
+      "declining_pages_found": 30,
+      "review_hours_at_15min": 12.5,
+      "hours_per_declining_page_found": 0.417,
+      "earlier_window_clicks_covered": 189,
+      "clients": 18
+    }
+  },
+  "assumptions": {
+    "review_minutes_per_page": 15,
+    "value_proxy": "clicks in days 61-90 (not revenue)"
+  },
+  "exports": [
+    "work/outputs/action_queue.csv (git-ignored, regenerated)",
+    "work/figures/w07_precision_at_k.png",
+    "work/figures/w07_decline_by_age.png"
+  ]
+}
