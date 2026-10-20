@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Pages Should a Content Reviewer Check First?</title>
+<meta name="description" content="A FlyRank ML Internship capstone: ranking 30,000 live pages for review, a transparent rule vs a learned ranker, and what survives honest, client-grouped, time-aware validation.">
+<style>
+  :root{
+    --bg:#fbfaf7; --fg:#1d232b; --muted:#5b6672; --line:#e3e0d8; --card:#ffffff;
+    --accent:#2e4c7a; --accent-soft:#e8eef7; --warn:#8a5a12; --warn-soft:#fbf1df;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171b; --fg:#e7e9ec; --muted:#a2abb5; --line:#2b3138; --card:#1b1f24;
+      --accent:#9db7e0; --accent-soft:#1f2a3a; --warn:#e7b768; --warn-soft:#2c2416;
+    }
+    :root:not([data-theme="light"]) figure img{ background:#fff; border-radius:6px; }
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--fg);
+        font:17px/1.65 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  main{ max-width:760px; margin:0 auto; padding:48px 16px 80px; }
+  header .kicker{ font:600 12px/1.4 system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  h1{ font:700 clamp(28px,5vw,40px)/1.15 system-ui, -apple-system, "Segoe UI", sans-serif; margin:10px 0 12px; letter-spacing:-.01em; }
+  .byline{ font:14px/1.5 system-ui, sans-serif; color:var(--muted); }
+  h2{ font:700 22px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; margin:44px 0 10px; padding-top:12px; border-top:1px solid var(--line); }
+  h2 .n{ color:var(--muted); font-weight:500; margin-right:6px; }
+  h3{ font:600 17px/1.4 system-ui, sans-serif; margin:24px 0 6px; }
+  p{ margin:0 0 14px; }
+  .abstract{ background:var(--card); border:1px solid var(--line); border-left:4px solid var(--accent); padding:18px 20px; margin:28px 0 8px; border-radius:6px; }
+  .abstract h2{ border:0; margin:0 0 8px; padding:0; font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .callout{ background:var(--warn-soft); border-radius:6px; padding:14px 16px; margin:18px 0; }
+  .callout strong{ color:var(--warn); }
+  ul,ol{ padding-left:22px; margin:0 0 14px; } li{ margin:4px 0; }
+  figure{ margin:24px 0; } figure img{ width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:6px; }
+  figcaption{ font:14px/1.5 system-ui, sans-serif; color:var(--muted); margin-top:8px; }
+  figcaption b{ color:var(--fg); }
+  .tablewrap{ overflow-x:auto; margin:16px 0 20px; }
+  table{ border-collapse:collapse; width:100%; font:14px/1.45 system-ui, sans-serif; }
+  th,td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th{ font-weight:600; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  td.num, th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+  tr.final td{ background:var(--accent-soft); font-weight:600; }
+  code{ font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+  a{ color:var(--accent); }
+  footer{ margin-top:56px; font:13px/1.5 system-ui, sans-serif; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="kicker">FlyRank ML Internship · Capstone · Lane 2: Refresh / Content Opportunity Scoring</div>
+  <h1>Which pages should a content reviewer check first?</h1>
+  <div class="byline">Azad Wali · October 2026 · Decision-support research on 30,000 live, pseudonymised pages</div>
+</header>
+
+<section class="abstract" id="abstract">
+  <h2>Abstract</h2>
+  <p>FlyRank publishes and maintains search content for many brands. Its product already flags pages for refresh or click-through fixes using hand-written rules, but a review team can only open a few dozen pages a week. This study asks which pages that team should open first.</p>
+  <p>On 30,000 pseudonymised pages from 32 client sites, I tested the signals behind two of those flags, encoded one as a transparent rule, and compared it with learned rankers. Every page was scored by a model that had never seen its client, using only data from <em>before</em> the window in which decline is measured.</p>
+  <p>The final ranker placed 86% declining pages in its top 50, against 70% for the rule and 54% at random. A stronger-looking model's lead (96% on a random split) did not survive the same checks. The output is a capped, human-reviewed queue for review order — not a forecast, and not evidence that any action prevents decline.</p>
+</section>
+
+<h2 id="intro"><span class="n">1</span>The content problem this comes from</h2>
+<p><strong>A typical week:</strong> a reviewer looks after hundreds of published articles across several client sites. Some are slipping in search — fewer people see them each week — but most teams notice only after the traffic is gone. There is time to open perhaps fifty pages. Which fifty?</p>
+<p>FlyRank already answers this with rules. Its product flags pages that look stale, pages whose click-through is weak for their position, and "quick wins". FlyRank's own March 2026 research report recommends the same priorities in prose: refresh mature pages before they decay, and improve click capture on pages that already rank. Rules like these are readable and they run in production — but their thresholds are chosen by hand, and nobody had checked how well they order a review list on held-out clients.</p>
+<p>This paper is that check, done as a case study on FlyRank's own data. It asks three things:</p>
+<ol>
+  <li><strong>Do the signals behind the flags hold up?</strong> Staleness (behind the refresh flags) and CTR-versus-position (behind the CTR-fix flag).</li>
+  <li><strong>Can a simple learned ranker order the review list better than a rule built from those signals?</strong></li>
+  <li><strong>How much of any gain survives honest validation</strong> — new clients, and no peeking at the period the outcome is measured in?</li>
+</ol>
+<p>The short answers: one signal held and one did not; yes, a plain logistic regression beats the rule; and less survives than a standard workflow would report, which changed which model I would recommend.</p>
+
+<h2 id="data"><span class="n">2</span>Data</h2>
+<ul>
+  <li><strong>Source:</strong> the FlyRank ML Internship starter release — Google Search Console and Google Analytics 4 metrics, pseudonymised before release. There are no client names, domains, URLs, page titles or search queries.</li>
+  <li><strong>Size:</strong> 30,000 pages from 32 client sites. Each page has one 90-day performance window plus two 30-day comparison windows.</li>
+  <li><strong>Population:</strong> every page is at least 90 days old and had at least one impression in the window.</li>
+  <li><strong>Outcome (used only to grade rankings):</strong> a page counts as <em>declining</em> when its impressions fell more than 20% between the last 30 days and the 30 days before. That covers 16,262 pages (54.2%), so random ordering scores 0.54 at any list length.</li>
+  <li><strong>Never used as inputs:</strong> the outcome fields themselves and the two 30-day windows that build them. Site IDs were used only to group the validation, never as features. The release contains no product flags or health scores.</li>
+  <li><strong>Not used:</strong> the full 79-million-row warehouse release, which was not reachable from the environment this work ran in.</li>
+</ul>
+
+<h2 id="method"><span class="n">3</span>Methodology</h2>
+<h3>Step 1 — Check the signals before trusting them</h3>
+<ul>
+  <li><strong>Staleness: mixed.</strong> Pooled across all pages, pages last updated 91–120 days ago declined more (61% vs 51%). But updates arrive in client-wide batches — two clients hold two-thirds of that bucket — and inside individual clients the gap was about zero. The common "180 days stale" threshold fired on only 17 pages with real traffic.</li>
+  <li><strong>CTR versus position: confirmed, for positions 1–20.</strong> The further a page's click-through falls below the median for its position band, the more often it declined. This held inside 15 of the 16 clients large enough to check.</li>
+</ul>
+<h3>Step 2 — A transparent baseline</h3>
+<p>A page is flagged if it ranks in positions 1–20, has at least 500 impressions, and its CTR is less than half the median for its position band. Flagged pages are ranked by how far CTR falls short, scaled by the log of impressions. The rule has one reason code, one action ("rewrite title/meta") and no fitted weights.</p>
+<h3>Step 3 — Learned rankers</h3>
+<p>I compared logistic regression, a depth-3 decision tree, random forest and gradient boosting. Each model's predicted probability is used as a ranking and graded with <em>precision@K</em>: of the top K pages, the share that actually declined.</p>
+<h3>Step 4 — Validation designed to be hard to fool</h3>
+<ul>
+  <li><strong>Grouped by client.</strong> Five folds, so every page is scored by a model that never saw any page from its site. This mirrors adding a new client.</li>
+  <li><strong>Time-aware inputs.</strong> The outcome compares days 1–30 with days 31–60 before export, but the standard 90-day totals include those days. I rebuilt traffic for days 61–90 exactly (90-day total minus the two 30-day windows; never negative). The final model uses only that earlier window plus page metadata.</li>
+  <li><strong>Leakage checks.</strong> I planted the outcome field as a feature: accuracy jumped to near-perfect (AUC 1.00), which shows the test harness catches leaks. I also ran drop-one tests, a feature timeline, and a scan for product flags.</li>
+</ul>
+
+<h2 id="results"><span class="n">4</span>Results</h2>
+<figure>
+  <img src="img/validation_story.png" alt="Bar chart of precision at 50: random order 0.54, rule 0.70, gradient boosting random split 0.96, grouped 0.84, grouped plus strict timeline 0.60, logistic regression grouped plus strict timeline 0.86." loading="lazy">
+  <figcaption><b>The same task, graded more honestly from left to right.</b> Gradient boosting looks best under a random split (0.96) but falls to 0.60 once its inputs stop overlapping the outcome window. Plain logistic regression holds at 0.86.</figcaption>
+</figure>
+<div class="tablewrap"><table>
+  <thead><tr><th>Ranker</th><th>Validation</th><th class="num">P@50</th><th class="num">AUC</th></tr></thead>
+  <tbody>
+    <tr><td>Random order</td><td>—</td><td class="num">0.54</td><td class="num">—</td></tr>
+    <tr><td>Rule (CTR below position norm)</td><td>client-grouped, earlier window</td><td class="num">0.70</td><td class="num">—</td></tr>
+    <tr><td>Gradient boosting, all 90-day features</td><td>random split</td><td class="num">0.96</td><td class="num">0.78</td></tr>
+    <tr><td>Gradient boosting, all 90-day features</td><td>client-grouped</td><td class="num">0.84</td><td class="num">0.69</td></tr>
+    <tr><td>Gradient boosting, earlier window only</td><td>client-grouped</td><td class="num">0.60</td><td class="num">0.61</td></tr>
+    <tr class="final"><td>Logistic regression, earlier window only</td><td>client-grouped</td><td class="num">0.86</td><td class="num">0.66</td></tr>
+  </tbody>
+</table></div>
+<p><strong>What the final model leans on is unsurprising.</strong> Its three largest weights are:</p>
+<ul>
+  <li><strong>Earlier impressions</strong> — push toward decline.</li>
+  <li><strong>Earlier clicks</strong> — push away from decline.</li>
+  <li><strong>Page age</strong> — younger pages lean toward decline.</li>
+</ul>
+<p>Together, the first two are a smoother version of the CTR signal behind FlyRank's CTR-fix flag: pages that many people saw but few clicked. No single input is suspiciously strong; the best single feature alone reaches an AUC of only about 0.59.</p>
+<figure>
+  <img src="img/precision_at_k.png" alt="Line chart of precision at K from 10 to 1000 pages: the logistic regression ranker stays between 0.77 and 0.90, the rule between 0.65 and 0.75, random order at 0.54." loading="lazy">
+  <figcaption><b>The lead holds across realistic review depths.</b> From 10 to 1,000 pages, the ranker stays above the rule (0.77–0.90 vs 0.65–0.75), and both stay above random (0.54). The two lines converge as the list grows.</figcaption>
+</figure>
+<figure>
+  <img src="img/decline_by_age.png" alt="Bar chart of decline rate by page age: 63% at 90 to 180 days, 59% at 181 to 270, 47% at 271 to 365, 43% above 365 days." loading="lazy">
+  <figcaption><b>Younger pages declined more often, pooled across clients</b> (63% at 90–180 days vs 43% past a year). Inside clients the gap nearly vanishes (median +0.02 across 11 clients), so this is mostly about <em>which sites</em> have young pages. We found no sign of a late-life decay point in this slice.</figcaption>
+</figure>
+
+<h2 id="limits"><span class="n">5</span>Limitations and honest framing</h2>
+<div class="callout"><strong>The biggest one:</strong> the model finds decline, not value. Its 50 most confident picks had only 10 clicks between them in the earlier window. A list weighted by clicks covered 21,167 clicks, but only 48% of those pages declined — below random. Losing impressions on a page nobody clicks costs little.</div>
+<ul>
+  <li><strong>One snapshot, same-period outcome.</strong> The outcome compares two recent 30-day windows. This ranks pages for review; it does not forecast next month.</li>
+  <li><strong>No causal claim.</strong> No page here was randomly refreshed or rewritten, so nothing shows that an action prevents decline. The same applies to "refreshed vs not" comparisons: in this slice they are mostly comparisons between client sites.</li>
+  <li><strong>Client effects are large.</strong> 7 of 32 sites had a decline rate below 20% or above 80%, where page-level ranking adds little. In raw model order, one site filled 84% of the top 200.</li>
+  <li><strong>Outcome noise.</strong> 15% of "declines" rest on fewer than 20 earlier impressions, for example a single impression falling to zero.</li>
+  <li><strong>One pattern dominates the top.</strong> 82% of the top 50 had zero earlier clicks despite hundreds of impressions. Some of these may be tracking gaps rather than real pages in trouble.</li>
+  <li><strong>Scope.</strong> Starter slice only, and only pages at least 90 days old that were still visible. Not yet tested on the full warehouse, on new pages, or on a forward time window.</li>
+</ul>
+
+<h2 id="recs"><span class="n">6</span>Ranked recommendations</h2>
+<ol>
+  <li><strong>Run two short lists, not one.</strong> A <em>risk queue</em> of the top 50 by score, capped at 10 pages per site (the cap costs no precision: 0.86 vs 0.84 uncapped). Plus a <em>value lane</em> of the top 20 by score × earlier clicks.</li>
+  <li><strong>Check tracking before editing</strong> any page with zero clicks on 300+ impressions.</li>
+  <li><strong>Skip pages updated in the last 60 days</strong> (69% of the top 200). Wait for the last change to show up before acting again.</li>
+  <li><strong>Treat many queue pages from one site as one case.</strong> Look for a site-level cause first: a migration, a tracking change, or an algorithm update.</li>
+  <li><strong>Keep humans on every edit.</strong> Do not automate rewrites, merges, redirects, deletions, or messages to clients that their content "is declining".</li>
+  <li><strong>Next step:</strong> a click-weighted outcome, so risk and value point at the same pages, validated on a forward window in the warehouse release.</li>
+</ol>
+<p>Each page in the exported queue carries an action, a reason code (for example <code>low_ctr_page_1_2 | earlier_ctr_low</code>) and three review flags. The capped top 50 found 43 declining pages in about 12.5 review hours, versus 30 for a random 50.</p>
+
+<h2 id="repro"><span class="n">7</span>Reproducibility</h2>
+<ul>
+  <li><strong>Repository:</strong> <a href="https://github.com/susheel123-sketch/Flyrank-Internship-ml">github.com/susheel123-sketch/Flyrank-Internship-ml</a></li>
+  <li><strong>Notebooks</strong> (<code>work/notebooks/</code>):
+    <ul>
+      <li><code>w04_baseline_score</code> — signals and rule</li>
+      <li><code>w05_model</code> — models</li>
+      <li><code>w06_validation_audit</code> — honest splits and leakage</li>
+      <li><code>w07_action_playbook</code> — queue and gates</li>
+      <li><code>capstone</code> — re-runs every headline number on this page and asserts it matches the committed receipts</li>
+    </ul>
+  </li>
+  <li><strong>Receipts:</strong> <code>work/outputs/w04…w07_*_metrics.json</code>. The queue CSV is regenerated by the Week-7 notebook rather than committed.</li>
+  <li><strong>Settings:</strong> seed 42, scikit-learn 1.9.1, 5-fold GroupKFold by client. Each notebook runs top to bottom in Colab from a fresh clone.</li>
+</ul>
+
+<h2 id="ack"><span class="n">8</span>Acknowledgments and data credit</h2>
+<p>Built on the FlyRank ML Internship dataset — <a href="https://flyrank.ai">flyrank.ai</a>. The data is a pseudonymised release of real Google Search Console and Google Analytics 4 performance data, shared for the internship under public-safety rules: no client names, URLs or search queries. Methodology guidance came from the internship's weekly sessions and from FlyRank's report <em>The State of AI-Driven SEO, March 2026</em>, whose disclosed evidence standard this work tried to follow.</p>
+
+<footer>Claims on this page use observed / measured / directional / decision-support language. Nothing here claims to model or predict Google's ranking system.</footer>
+</main>
+</body>
+</html>
