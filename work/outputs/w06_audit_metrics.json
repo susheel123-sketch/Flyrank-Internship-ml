@@ -1,0 +1,170 @@
+{
+  "assignment": "ML-09",
+  "seed": 42,
+  "base_rate": 0.5421,
+  "split_before_after": [
+    {
+      "model": "Logistic Regression",
+      "split": "BEFORE: random 5-fold",
+      "per-fold P@50": 0.868,
+      "AUC": 0.716,
+      "accuracy": 0.661,
+      "pooled P@50": 0.92,
+      "pooled P@100": 0.87
+    },
+    {
+      "model": "Logistic Regression",
+      "split": "AFTER: grouped by client",
+      "per-fold P@50": 0.776,
+      "AUC": 0.659,
+      "accuracy": 0.62,
+      "pooled P@50": 0.86,
+      "pooled P@100": 0.81
+    },
+    {
+      "model": "Gradient Boosting",
+      "split": "BEFORE: random 5-fold",
+      "per-fold P@50": 0.972,
+      "AUC": 0.781,
+      "accuracy": 0.705,
+      "pooled P@50": 0.96,
+      "pooled P@100": 0.94
+    },
+    {
+      "model": "Gradient Boosting",
+      "split": "AFTER: grouped by client",
+      "per-fold P@50": 0.832,
+      "AUC": 0.685,
+      "accuracy": 0.649,
+      "pooled P@50": 0.84,
+      "pooled P@100": 0.84
+    }
+  ],
+  "timeline_before_after": [
+    {
+      "model": "Logistic Regression",
+      "features": "Week-5 features (overlap label window)",
+      "per-fold P@50": 0.776,
+      "AUC": 0.659,
+      "accuracy": 0.62,
+      "pooled P@50": 0.86,
+      "pooled P@100": 0.81
+    },
+    {
+      "model": "Logistic Regression",
+      "features": "strict timeline (days 61-90 + static)",
+      "per-fold P@50": 0.816,
+      "AUC": 0.663,
+      "accuracy": 0.635,
+      "pooled P@50": 0.86,
+      "pooled P@100": 0.85
+    },
+    {
+      "model": "Gradient Boosting",
+      "features": "Week-5 features (overlap label window)",
+      "per-fold P@50": 0.832,
+      "AUC": 0.685,
+      "accuracy": 0.649,
+      "pooled P@50": 0.84,
+      "pooled P@100": 0.84
+    },
+    {
+      "model": "Gradient Boosting",
+      "features": "strict timeline (days 61-90 + static)",
+      "per-fold P@50": 0.68,
+      "AUC": 0.612,
+      "accuracy": 0.611,
+      "pooled P@50": 0.6,
+      "pooled P@100": 0.59
+    }
+  ],
+  "pooled_rankers": [
+    {
+      "ranker": "Week-4 baseline (as built)",
+      "pooled P@20": 0.65,
+      "pooled P@50": 0.6,
+      "pooled P@100": 0.66,
+      "pooled P@200": 0.685,
+      "AUC (pooled)": NaN,
+      "base rate": 0.542
+    },
+    {
+      "ranker": "Week-4 baseline (strict timeline)",
+      "pooled P@20": 0.65,
+      "pooled P@50": 0.7,
+      "pooled P@100": 0.75,
+      "pooled P@200": 0.72,
+      "AUC (pooled)": NaN,
+      "base rate": 0.542
+    },
+    {
+      "ranker": "Logistic Regression \u2014 Week-5 features (overlap label window)",
+      "pooled P@20": 0.8,
+      "pooled P@50": 0.86,
+      "pooled P@100": 0.81,
+      "pooled P@200": 0.82,
+      "AUC (pooled)": 0.654,
+      "base rate": 0.542
+    },
+    {
+      "ranker": "Logistic Regression \u2014 strict timeline (days 61-90 + static)",
+      "pooled P@20": 0.9,
+      "pooled P@50": 0.86,
+      "pooled P@100": 0.85,
+      "pooled P@200": 0.85,
+      "AUC (pooled)": 0.661,
+      "base rate": 0.542
+    },
+    {
+      "ranker": "Gradient Boosting \u2014 Week-5 features (overlap label window)",
+      "pooled P@20": 0.9,
+      "pooled P@50": 0.84,
+      "pooled P@100": 0.84,
+      "pooled P@200": 0.845,
+      "AUC (pooled)": 0.693,
+      "base rate": 0.542
+    },
+    {
+      "ranker": "Gradient Boosting \u2014 strict timeline (days 61-90 + static)",
+      "pooled P@20": 0.75,
+      "pooled P@50": 0.6,
+      "pooled P@100": 0.59,
+      "pooled P@200": 0.62,
+      "AUC (pooled)": 0.632,
+      "base rate": 0.542
+    }
+  ],
+  "planted_leak_auc": 1.0,
+  "claim_ledger": [
+    {
+      "setting": "Week-5 GB, random split",
+      "AUC": 0.781,
+      "pooled P@50": 0.96,
+      "base rate": 0.542
+    },
+    {
+      "setting": "Week-5 GB, grouped split",
+      "AUC": 0.685,
+      "pooled P@50": 0.84,
+      "base rate": 0.542
+    },
+    {
+      "setting": "GB, grouped + strict timeline",
+      "AUC": 0.612,
+      "pooled P@50": 0.6,
+      "base rate": 0.542
+    },
+    {
+      "setting": "LR, grouped + strict timeline",
+      "AUC": 0.663,
+      "pooled P@50": 0.86,
+      "base rate": 0.542
+    },
+    {
+      "setting": "Week-4 baseline, grouped + strict timeline",
+      "AUC": NaN,
+      "pooled P@50": 0.7,
+      "base rate": 0.542
+    }
+  ]
+}
