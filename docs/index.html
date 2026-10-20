@@ -42,7 +42,7 @@
   th{ font-weight:600; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
   td.num, th.num{ text-align:right; font-variant-numeric:tabular-nums; }
   tr.final td{ background:var(--accent-soft); font-weight:600; }
-  code{ font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
+  code{ overflow-wrap:anywhere; font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background:var(--accent-soft); padding:1px 5px; border-radius:4px; }
   a{ color:var(--accent); }
   .keyfind{ margin:18px 0 6px; padding:14px 18px; border:1px solid var(--line); border-radius:6px; background:var(--card); }
   .keyfind h2{ border:0; margin:0 0 6px; padding:0; font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
@@ -57,12 +57,12 @@
 <header>
   <div class="kicker">FlyRank ML Internship · Capstone · Lane 2: Refresh / Content Opportunity Scoring</div>
   <h1>Which pages should a content reviewer check first?</h1>
-  <div class="byline">Azad Wali · October 2026 · Decision-support research on 30,000 live, pseudonymised pages</div>
+  <div class="byline">Azad Wali · October 2026 · Decision-support research on 30,000 starter pages + a forward test on 113,588 warehouse pages</div>
 </header>
 
 <section class="abstract" id="abstract">
   <h2>Abstract</h2>
-  <p>FlyRank flags pages for refresh or click-through fixes with hand-written rules, but a content reviewer can only open a few dozen pages a week, so this study asks which pages they should open first. I used 30,000 pseudonymised pages from 32 client sites in the FlyRank ML Internship release, plus a first check on 176,738 pages from the full warehouse. I tested the signals behind two of FlyRank's flags, turned the one that held up into a transparent rule, and compared it with learned rankers scored only on clients they never saw and only on data from before the outcome window. The final ranker put 86% declining pages in its top 50, against 70% for the rule and 54% at random, while a stronger-looking model (96% on a random split) fell to 60% under the same checks. The output is a capped, human-reviewed queue for review order — decision-support, not a forecast, and not evidence that any action prevents decline.</p>
+  <p>FlyRank flags pages for refresh or click-through fixes with hand-written rules, but a content reviewer can only open a few dozen pages a week, so this study asks which pages they should open first. I built and audited the method on 30,000 pseudonymised pages from 32 client sites in the FlyRank ML Internship release, then repeated it on the full warehouse: 113,588 pages from 33 clients, one month later than the model was trained on. I tested the signals behind two of FlyRank's flags, turned the one that held up into a transparent rule, and compared it with learned rankers scored only on clients they never saw and only on data from before the outcome window. On the starter data the final ranker put 86% declining pages in its top 50 (rule 70%, random 54%), and on the warehouse forward test it held 68–71% across the top 100–1,000 pages against 33% at random, while the rule fell to or below random beyond about the top 100 pages and gradient boosting stayed below random throughout. The output is a capped, human-reviewed queue for review order — decision-support, not a forecast, and not evidence that any action prevents decline.</p>
 </section>
 
 <section class="keyfind" aria-label="Key findings">
@@ -71,6 +71,7 @@
     <li><strong>One flag signal held, one didn't.</strong> Low CTR for a page's position goes with decline inside 15 of 16 clients. "Stale" pages only look riskier because of which clients update in batches.</li>
     <li><strong>A simple model beats the rule:</strong> P@50 0.86 vs 0.70, with a base rate of 0.54.</li>
     <li><strong>Honest validation changed the winner.</strong> Gradient boosting's lead came from inputs that overlap the outcome window.</li>
+    <li><strong>It held up forward in time on the full warehouse:</strong> 0.68–0.71 of the top 100–1,000 pages declined, vs 0.33 at random. The rule and gradient boosting did not hold up.</li>
     <li><strong>It finds decline, not value.</strong> The top 50 pages had only 10 clicks between them.</li>
   </ul>
 </section>
@@ -98,7 +99,7 @@
   <li><strong>Population:</strong> every page is at least 90 days old and had at least one impression in the window.</li>
   <li><strong>Outcome (used only to grade rankings):</strong> a page counts as <em>declining</em> when its impressions fell more than 20% between the last 30 days and the 30 days before. That covers 16,262 pages (54.2%), so random ordering scores 0.54 at any list length.</li>
   <li><strong>Never used as inputs:</strong> the outcome fields themselves and the two 30-day windows that build them. Site IDs were used only to group the validation, never as features. The release contains no product flags or health scores.</li>
-  <li><strong>Warehouse check:</strong> from the full release (about 79 million daily rows), I used the February and March 2026 partitions of the daily performance table plus the content table. That is a mid-panel pair of months, not the sealed final month. After keeping only rows where Search Console data actually exists (3.6M of 9.8M March rows), 176,738 pages remain. This was used for the data contract and a first leakage check (end of section 4). The ranking results in this paper come from the starter slice.</li>
+  <li><strong>Warehouse release:</strong> from the full release (about 79 million daily rows), I used four monthly partitions of the daily performance table (December 2025 to March 2026) plus the content and client tables. These are mid-panel months; the sealed final month (June 2026) was not touched.<ul><li>Only rows where Search Console data actually exists were kept (<code>gsc_data_available IS TRUE</code>).</li><li>Only clients whose Search Console history starts by 1 December 2025 were kept: 39 of 104.</li><li>Only pages created before their feature month were kept.</li></ul>That leaves 103,158 pages from 35 clients for training and 113,588 pages from 33 clients for testing.</li>
 </ul>
 
 <h2 id="method"><span class="n">3</span>Methodology</h2>
@@ -150,13 +151,35 @@
   <figcaption><b>Figure 3 — Younger pages declined more often, pooled across clients</b> (63% at 90–180 days vs 43% past a year). Inside clients the gap nearly vanishes (median +0.02 across 11 clients), so this is mostly about <em>which sites</em> have young pages. We found no sign of a late-life decay point in this slice.</figcaption>
 </figure>
 
-<h3 id="warehouse">A first check on the full warehouse — a negative result</h3>
-<p>Before the starter-slice work, I built a first model on the warehouse. The label was March vs February impressions (more than a 10% drop counts as declining). The features were March totals, and the split was random by page. I ran it on 176,738 pages.</p>
+<h3 id="warehouse">The forward test on the full warehouse</h3>
+<p>The starter results come from one snapshot. To check that the method also works <em>later in time</em> and on <em>new clients</em>, I re-ran it on the warehouse with a strict design:</p>
 <ul>
-  <li><strong>Accuracy:</strong> 0.793.</li>
-  <li><strong>Always guessing "not declining":</strong> 0.812.</li>
+  <li><strong>Training:</strong> December features predict whether February impressions fell more than 20% below January.</li>
+  <li><strong>Testing:</strong> January features predict whether March fell below February.</li>
+  <li><strong>Unseen clients:</strong> every test client was held out of training (5 client-grouped folds).</li>
+  <li><strong>Clean inputs:</strong> features always come from the month <em>before</em> the outcome window.</li>
 </ul>
-<p>The model was <strong>below the base rate</strong>. Its features also overlapped the label month, the same flaw shown in Figure 1 on the starter slice. I report it because it is the clearest example in this work of why every score needs its base rate printed next to it. A fair warehouse test is still to come: February features predicting March, grouped by client (section 6, item 6).</p>
+<figure>
+  <img src="img/warehouse_forward.png" alt="Line chart of precision at K on the warehouse forward test: logistic regression between 0.60 and 0.71, the rule falling from 0.70 to 0.27, gradient boosting between 0.17 and 0.25, random order at 0.33." loading="lazy">
+  <figcaption><b>Figure 4 — On the full warehouse, a month later and on unseen clients, the final ranker keeps roughly double the base rate across the whole review range.</b> The rule only works for its first few dozen pages. Gradient boosting falls below random.</figcaption>
+</figure>
+<div class="tablewrap"><table>
+  <thead><tr><th>Ranker (113,588 test pages, 33 clients)</th><th class="num">P@50</th><th class="num">P@100</th><th class="num">P@500</th><th class="num">P@1000</th><th class="num">AUC</th></tr></thead>
+  <tbody>
+    <tr><td>Random order</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">0.50</td></tr>
+    <tr><td>Rule (CTR below position norm)</td><td class="num">0.52</td><td class="num">0.39</td><td class="num">0.29</td><td class="num">0.27</td><td class="num">0.38</td></tr>
+    <tr><td>Gradient boosting</td><td class="num">0.22</td><td class="num">0.22</td><td class="num">0.19</td><td class="num">0.17</td><td class="num">0.56</td></tr>
+    <tr class="final"><td>Logistic regression (final)</td><td class="num">0.60</td><td class="num">0.68</td><td class="num">0.71</td><td class="num">0.68</td><td class="num">0.58</td></tr>
+  </tbody>
+</table></div>
+<p><strong>How to read it:</strong></p>
+<ul>
+  <li><strong>The final ranker generalises where it matters</strong> — the top of the review list.</li>
+  <li><strong>With the per-site cap, its top 50 held 35 declining pages (0.70) across 14 clients.</strong></li>
+  <li><strong>Its whole-list ordering is weak.</strong> Its AUC is 0.58, and 0.49 once pages with fewer than 20 base-month impressions are removed. Its value is in picking a short list, not in ranking every page.</li>
+  <li><strong>Gradient boosting failing again</strong>, now forward in time, confirms the Week-6 decision to ship the simpler model.</li>
+  <li><strong>An earlier warehouse model fell below its base rate.</strong> It used outcome-month features and a random split, and scored 0.793 accuracy against a 0.812 base rate. That lesson shaped this design.</li>
+</ul>
 
 <h2 id="limits"><span class="n">5</span>Limitations and honest framing</h2>
 <p><strong>Intended use:</strong> deciding <em>which pages a human reviewer opens first</em>.</p>
@@ -173,9 +196,10 @@
   <li><strong>One snapshot, same-period outcome.</strong> The outcome compares two recent 30-day windows. This ranks pages for review; it does not forecast next month.</li>
   <li><strong>No causal claim.</strong> No page here was randomly refreshed or rewritten, so nothing shows that an action prevents decline. The same applies to "refreshed vs not" comparisons: in this slice they are mostly comparisons between client sites.</li>
   <li><strong>Client effects are large.</strong> 7 of 32 sites had a decline rate below 20% or above 80%, where page-level ranking adds little. In raw model order, one site filled 84% of the top 200.</li>
+  <li><strong>Whole-list ranking is weak on the warehouse.</strong> AUC is 0.58, and 0.49 on pages with at least 20 base-month impressions. Use the top of the list, not the full order.</li>
   <li><strong>Outcome noise.</strong> 15% of "declines" rest on fewer than 20 earlier impressions, for example a single impression falling to zero.</li>
   <li><strong>One pattern dominates the top.</strong> 82% of the top 50 had zero earlier clicks despite hundreds of impressions. Some of these may be tracking gaps rather than real pages in trouble.</li>
-  <li><strong>Scope.</strong> The ranking results come from the starter slice, and cover only pages at least 90 days old that were still visible. The one warehouse model so far scored below its base rate. The final ranker has not yet been tested on the warehouse, on new pages, or on a forward time window.</li>
+  <li><strong>Scope.</strong> The warehouse forward test covers one train/test pair of months (December→February and January→March). Only 39 of 104 clients had enough history to include, and only pages that existed and were visible in the base month were scored. More months, and the newest clients, are untested.</li>
 </ul>
 
 <h2 id="recs"><span class="n">6</span>Ranked recommendations</h2>
@@ -185,7 +209,7 @@
   <li><strong>Skip pages updated in the last 60 days</strong> (69% of the top 200). Wait for the last change to show up before acting again.</li>
   <li><strong>Treat many queue pages from one site as one case.</strong> Look for a site-level cause first: a migration, a tracking change, or an algorithm update.</li>
   <li><strong>Keep humans on every edit.</strong> Do not automate rewrites, merges, redirects, deletions, or messages to clients that their content "is declining".</li>
-  <li><strong>Next step:</strong> a click-weighted outcome, so risk and value point at the same pages, validated on a forward window in the warehouse release.</li>
+  <li><strong>Next step:</strong> a click-weighted outcome, so risk and value point at the same pages. On the warehouse, the capped top 50 covered only 50 feature-month clicks, and 76% of those pages had zero clicks. Then repeat the forward test across more month pairs.</li>
 </ol>
 <p>Each page in the exported queue carries an action, a reason code (for example <code>low_ctr_page_1_2 | earlier_ctr_low</code>) and three review flags. The capped top 50 found 43 declining pages in about 12.5 review hours, versus 30 for a random 50.</p>
 
@@ -199,7 +223,8 @@
       <li><code>w06_validation_audit</code> — honest splits and leakage</li>
       <li><code>w07_action_playbook</code> — queue and gates</li>
       <li><code>capstone</code> — re-runs every headline number on this page and asserts it matches the committed receipts</li>
-      <li><code>w03_data_contract</code>, <code>w03_feature_leakage_check</code> — the warehouse check (needs a free Hugging Face read token, stored as a Colab Secret named <code>HF_TOKEN</code>)</li>
+      <li><code>w08_warehouse_forward_test</code> — the warehouse forward test (receipt: <code>work/outputs/w08_warehouse_forward_metrics.json</code>)</li>
+      <li><code>w03_data_contract</code>, <code>w03_feature_leakage_check</code> — the first warehouse check (needs a free Hugging Face read token, stored as a Colab Secret named <code>HF_TOKEN</code>)</li>
     </ul>
   </li>
   <li><strong>Receipts:</strong> <code>work/outputs/w04…w07_*_metrics.json</code>. The queue CSV is regenerated by the Week-7 notebook rather than committed.</li>
@@ -209,7 +234,7 @@
 <h2 id="ack"><span class="n">8</span>Acknowledgments and data credit</h2>
 <p>Built on the FlyRank ML Internship dataset — <a href="https://flyrank.ai" target="_blank" rel="noopener">flyrank.ai</a>. The data is a pseudonymised release of real Google Search Console and Google Analytics 4 performance data, shared for the internship under public-safety rules: no client names, URLs or search queries. Methodology guidance came from the internship's weekly sessions and from FlyRank's report <em>The State of AI-Driven SEO, March 2026</em>, whose disclosed evidence standard this work tried to follow.</p>
 
-<footer>Version 1.1 · 20 October 2026 · Cite as: Wali, A. (2026). <em>Which pages should a content reviewer check first?</em> FlyRank ML Internship capstone. https://susheel123-sketch.github.io/Flyrank-Internship-ml/<br>Claims on this page use observed / measured / directional / decision-support language. Nothing here claims to model or predict Google's ranking system.</footer>
+<footer>Version 1.2 · 20 October 2026 · Cite as: Wali, A. (2026). <em>Which pages should a content reviewer check first?</em> FlyRank ML Internship capstone. https://susheel123-sketch.github.io/Flyrank-Internship-ml/<br>Claims on this page use observed / measured / directional / decision-support language. Nothing here claims to model or predict Google's ranking system.</footer>
 </main>
 </body>
 </html>

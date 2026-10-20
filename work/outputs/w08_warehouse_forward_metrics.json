@@ -1,0 +1,79 @@
+{
+  "assignment": "capstone warehouse forward test",
+  "seed": 42,
+  "train_period": "features 2025-12, outcome 2026-02 vs 2026-01",
+  "test_period": "features 2026-01, outcome 2026-03 vs 2026-02",
+  "split": "GroupKFold(5) by client_hash_id; train rows from train period only",
+  "n_train_pages": 103158,
+  "n_test_pages": 113588,
+  "n_test_clients": 33,
+  "base_rate_test": 0.3251,
+  "results": [
+    {
+      "ranker": "Random order (base rate)",
+      "P@20": 0.325,
+      "P@50": 0.325,
+      "P@100": 0.325,
+      "P@500": 0.325,
+      "P@1000": 0.325,
+      "AUC": 0.5,
+      "capped P@50": 0.325
+    },
+    {
+      "ranker": "Rule (CTR below position norm)",
+      "P@20": 0.7,
+      "P@50": 0.52,
+      "P@100": 0.39,
+      "P@500": 0.29,
+      "P@1000": 0.272,
+      "AUC": 0.379,
+      "capped P@50": 0.5
+    },
+    {
+      "ranker": "Logistic Regression (final)",
+      "P@20": 0.7,
+      "P@50": 0.6,
+      "P@100": 0.68,
+      "P@500": 0.712,
+      "P@1000": 0.681,
+      "AUC": 0.581,
+      "capped P@50": 0.7
+    },
+    {
+      "ranker": "Gradient Boosting",
+      "P@20": 0.25,
+      "P@50": 0.22,
+      "P@100": 0.22,
+      "P@500": 0.194,
+      "P@1000": 0.173,
+      "AUC": 0.556,
+      "capped P@50": 0.34
+    }
+  ],
+  "robustness_base_ge_20": [
+    {
+      "ranker": "Rule (CTR below position norm)",
+      "P@50 (base >= 20 impressions)": 0.52,
+      "AUC (base >= 20)": 0.443,
+      "base rate (base >= 20)": 0.265
+    },
+    {
+      "ranker": "Logistic Regression (final)",
+      "P@50 (base >= 20 impressions)": 0.68,
+      "AUC (base >= 20)": 0.487,
+      "base rate (base >= 20)": 0.265
+    },
+    {
+      "ranker": "Gradient Boosting",
+      "P@50 (base >= 20 impressions)": 0.28,
+      "AUC (base >= 20)": 0.484,
+      "base rate (base >= 20)": 0.265
+    }
+  ],
+  "capped_top50_final": {
+    "declined": 35,
+    "clients": 14,
+    "feature_month_clicks": 50
+  },
+  "source": "parsed from the executed outputs of work/notebooks/w08_warehouse_forward_test.ipynb (run in Colab against the Hugging Face warehouse)"
+}
